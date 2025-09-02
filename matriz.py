@@ -22,18 +22,22 @@ class Matriz:
         # Inicializamos todo a 0
         self.matriz[i].append(0)
   
+  # Check de limites
+  # Lo puse entre dos barras bajas porque es un metodo 'privado' (no lo va a usar el usuario de la clase)
+  def _boundcheck_(self, fila, columna):
+    if fila > self.filas or columna > self.columnas or fila <= 0 or columna <= 0:
+      raise f"Sobrepaso de indice, se pidió la posición ({fila},{columna}) en una matriz de {self.filas}x{self.columnas}"
+
   # Indice
   def at(self, fila, columna):
-    if fila > self.filas or columna > self.columnas:
-      raise f"Sobrepaso de indice, se pidió la posición ({fila},{columna}) en una matriz de {self.filas}x{self.columnas}"
+    self._boundcheck_(fila, columna)
     # como los arreglos en python empiezan a contar de 0, restemos 1
     # asi la posicion #1 se convierte a 0, la verdadera posicion inicial
     return self.matriz[fila-1][columna-1]
   
   # Set
   def set(self, fila, columna, valor):
-    if fila > self.filas or columna > self.columnas:
-      raise f"Sobrepaso de indice, se pidió la posición ({fila},{columna}) en una matriz de {self.filas}x{self.columnas}"
+    self._boundcheck_(fila, columna)
     # Explicacion en la funcion d arriba
     self.matriz[fila - 1][columna - 1] = valor
 
