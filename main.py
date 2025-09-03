@@ -1,30 +1,60 @@
 import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+                               QLabel, QSpinBox, QPushButton, QTableWidget, QTableWidgetItem, 
+                               QHeaderView, QTextEdit, QMessageBox, QSplitter)
 from PySide6.QtCore import Qt
 
 class MatrixSolverApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("Resolvedor de Matrices - Método de Gauss")
-        self.setMinimumSize(600, 400)
+        self.setWindowTitle("Resolvedor de Matrices - Método de Gauss-Jordan")
+        self.setMinimumSize(800, 600)
         
         # Widget central
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
-        self.main_layout = QVBoxLayout(self.central_widget)
+        self.main_layout = QHBoxLayout(self.central_widget)
         
-        # Crear secciones para entrada
-        self.setup_dimension_inputs()
+        # Crear secciones para entrada y resultados
+        self.setup_input_section()
+        self.setup_result_section()
+        
+    def setup_input_section(self):
+        # Widget para la sección de entrada
+        input_widget = QWidget()
+        input_layout = QVBoxLayout(input_widget)
+        
+        # Crear secciones para entrada de dimensiones
+        self.setup_dimension_inputs(input_layout)
         
         # Inicializar tabla matriz
-        self.matrix_table = QTableWidget(3, 3)  # Tamaño inicial
-        self.setup_matrix_table()
+        self.matrix_table = QTableWidget(3, 3)
+        self.setup_matrix_table(input_layout)
         
-        # Conectar signals para actualización automática
-        self.n_spinbox.valueChanged.connect(self.update_matrix_dimensions)
-        self.m_spinbox.valueChanged.connect(self.update_matrix_dimensions)
+        # Botón para resolver
+        self.solve_button = QPushButton("Resolver Matriz")
+        self.solve_button.clicked.connect(self.solve_matrix)
+        input_layout.addWidget(self.solve_button)
         
-    def setup_dimension_inputs(self):
+        # Añadir a la sección principal
+        self.main_layout.addWidget(input_widget, 1)
+    
+    def setup_result_section(self):
+        # Widget para la sección de resultados
+        result_widget = QWidget()
+        result_layout = QVBoxLayout(result_widget)
+        
+        result_layout.addWidget(QLabel("Proceso y Resultados:"))
+        
+        # Área de texto para mostrar el proceso y resultados
+        self.result_text = QTextEdit()
+        self.result_text.setReadOnly(True)
+        result_layout.addWidget(self.result_text)
+        
+        # Añadir a la sección principal
+        self.main_layout.addWidget(result_widget, 1)
+    
+    def setup_dimension_inputs(self, layout):
         # Interfaz para la entrada de las dimensiones de la matriz
         input_layout = QHBoxLayout()
         
@@ -47,9 +77,13 @@ class MatrixSolverApp(QMainWindow):
         # Añadir un espacio elástico para empujar todo a la izquierda
         input_layout.addStretch()
         
-        self.main_layout.addLayout(input_layout)
+        layout.addLayout(input_layout)
+        
+        # Conectar signals para actualización automática
+        self.n_spinbox.valueChanged.connect(self.update_matrix_dimensions)
+        self.m_spinbox.valueChanged.connect(self.update_matrix_dimensions)
     
-    def setup_matrix_table(self):
+    def setup_matrix_table(self, layout):
         # Configurar la tabla de matriz
         n = self.n_spinbox.value()
         m = self.m_spinbox.value()
@@ -73,7 +107,7 @@ class MatrixSolverApp(QMainWindow):
                     self.matrix_table.setItem(row, col, QTableWidgetItem("0"))
         
         # Añadir la tabla a la estructura principal
-        self.main_layout.addWidget(self.matrix_table)
+        layout.addWidget(self.matrix_table)
     
     def update_matrix_dimensions(self):
         # Guardar datos existentes
@@ -114,6 +148,118 @@ class MatrixSolverApp(QMainWindow):
                 else:
                     # Nueva celda - inicializar con 0
                     self.matrix_table.setItem(row, col, QTableWidgetItem("0"))
+    
+    def solve_matrix(self):
+        # Obtener dimensiones
+        n = self.n_spinbox.value()
+        m = self.m_spinbox.value()
+        
+        # Leer la matriz de la tabla
+        matrix = []
+        try:
+            for row in range(n):
+                matrix_row = []
+                for col in range(m):
+                    item = self.matrix_table.item(row, col)
+                    value = float(item.text()) if item and item.text() != "" else 0.0
+                    matrix_row.append(value)
+                matrix.append(matrix_row)
+        except ValueError:
+            QMessageBox.warning(self, "Error", "Por favor, ingrese solo valores numéricos en la matriz.")
+            return
+        
+        # Aplicar el método de Gauss-Jordan
+        try:
+            steps, result = self.gauss_jordan(matrix)
+        except Exception as e:
+            QMessageBox.warning(self, "Error", f"Error al resolver la matriz: {str(e)}")
+            return
+        
+        # Mostrar los pasos y resultados
+        self.display_results(steps, result)
+    
+    def gauss_jordan(self, matrix):
+        n = len(matrix)
+        m = len(matrix[0])
+        steps = []
+        
+        # Hacer una copia de la matriz para no modificar la original
+        mat = [row[:] for row in matrix]
+        
+        steps.append(("Matriz original", self.format_matrix(mat)))
+        
+        # Aplicar eliminación de Gauss-Jordan
+        for col in range(min(n, m-1)):
+            # Encontrar el pivote (el elemento con mayor valor absoluto en la columna)
+            pivot_row = col
+            for row in range(col+1, n):
+                if abs(mat[row][col]) > abs(mat[pivot_row][col]):
+                    pivot_row = row
+            
+            # Intercambiar filas si es necesario
+            if pivot_row != col:
+                mat[col], mat[pivot_row] = mat[pivot_row], mat[col]
+                steps.append((f"Intercambiar fila {col+1} con fila {pivot_row+1}", self.format_matrix(mat)))
+            
+            # Si el pivote es cero, la matriz es singular
+            if abs(mat[col][col]) < 1e-10:
+                steps.append(("Pivote cero encontrado. La matriz puede ser singular.", ""))
+                continue
+            
+            # Hacer el pivote igual a 1
+            pivot_val = mat[col][col]
+            for j in range(col, m):
+                mat[col][j] /= pivot_val
+            steps.append((f"Hacer pivote (fila {col+1}) igual a 1", self.format_matrix(mat)))
+            
+            # Hacer ceros en la columna actual
+            for i in range(n):
+                if i != col:
+                    factor = mat[i][col]
+                    for j in range(col, m):
+                        mat[i][j] -= factor * mat[col][j]
+                    steps.append((f"Eliminar elemento en fila {i+1}, columna {col+1}", self.format_matrix(mat)))
+        
+        # Determinar el resultado
+        result = []
+        for i in range(n):
+            # Verificar si la fila es consistente
+            all_zeros = all(abs(mat[i][j]) < 1e-10 for j in range(m-1))
+            if all_zeros and abs(mat[i][m-1]) > 1e-10:
+                result.append("Sistema inconsistente: 0 = " + str(mat[i][m-1]))
+            elif all_zeros:
+                result.append("Fila de ceros: infinitas soluciones")
+            else:
+                # Encontrar el pivote
+                pivot_col = 0
+                while pivot_col < m-1 and abs(mat[i][pivot_col]) < 1e-10:
+                    pivot_col += 1
+                if pivot_col < m-1:
+                    result.append(f"x{pivot_col+1} = {mat[i][m-1]:.4f}")
+        
+        return steps, result
+    
+    def format_matrix(self, matrix):
+        formatted = ""
+        for row in matrix:
+            formatted += "[" + " ".join(f"{val:8.3f}" for val in row) + "]\n"
+        return formatted
+    
+    def display_results(self, steps, result):
+        self.result_text.clear()
+        self.result_text.append("=== PROCESO DE RESOLUCIÓN ===\n")
+        
+        for i, (description, matrix_str) in enumerate(steps):
+            self.result_text.append(f"Paso {i+1}: {description}")
+            if matrix_str:
+                self.result_text.append(matrix_str)
+        
+        self.result_text.append("\n=== RESULTADOS ===")
+        if result:
+            for res in result:
+                self.result_text.append(res)
+        else:
+            self.result_text.append("No se pudo determinar una solución única.")
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
