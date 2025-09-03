@@ -105,8 +105,6 @@ def resolver_gauss_jordan(mat: Matriz, debug:bool = False):
     case _:
       # Asertamos que valor retorno es una lista entonces
       # (el asertar es para que el interpretador no llore
-      assert valor_retorno is list[float]
-
       print("Soluciones:")
-      for i in range(0, len(valor_retorno)):
-        print(f"X{i + 1} = {valor_retorno[i]}")
+      for i in range(0, len(valor_retorno)): # type: ignore
+        print(f"X{i + 1} = {valor_retorno[i]:.2f}") # type: ignore

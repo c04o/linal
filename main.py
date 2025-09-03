@@ -3,25 +3,44 @@ from funciones import *
 
 # Uso de la clase matriz y las funciones
 if __name__ == "__main__":
-  # Creamos una matriz de 3 x 3
-  mat: Matriz = Matriz(filas=3, columnas=4)
+  tamaño: int = 0
+  
+  # Mientras el usuario no nos de un input valido
+  while True:
+    # El try catch basicamente agarra errores, entonces, si hay un error convirtiendo el input
+    # a numero, pues, atraparemos el error e informaremos al usuario
+    try:
+      tamaño = int(input("De que tamaño es el sistema de ecuaciones?: "))
+      # Si se puede parsear, fin al loop
+      break
+    except:
+      print("Por favor ingrese un número válido")
+  
+  # Creamos nuestra matriz, con la columna extra para los resultados
+  mat: Matriz = Matriz(filas=tamaño, columnas=tamaño + 1)
 
-  # matriz = [
-  #   [1, 1, 1, 6],
-  #   [2, 5, 1, -4],
-  #   [2, 3, 4, 5]
-  # ]
-
-  matriz = [
-    [1, 2, -1, 3],
-    [2, 4, -2, 6],
-    [3, 6, -3, 9]
-  ]
-
-  for i in range(0, len(matriz)):
-    for j in range(0, len(matriz[i])):
-      mat.set(fila=i+1, columna=j+1, valor=matriz[i][j])
+  for i in range(1, tamaño + 1):
+    print(f"Fila #{i}:")
+    for j in range(1, tamaño + 2):
+      if j == tamaño + 1:
+        print(f"Ingrese el valor del resultado: ")
+      else:
+        print(f"Ingrese el coeficiente de X{j}: ")
+      
+      valor: float = 0
+      # Mientras el usuario no nos de un input valido
+      while True:
+        # El try catch basicamente agarra errores, entonces, si hay un error convirtiendo el input
+        # a numero, pues, atraparemos el error e informaremos al usuario
+        try:
+          valor = float(input())
+          # Si se puede parsear, fin al loop
+          break
+        except:
+          print("Por favor ingrese un número válido")
+      
+      mat.set(i, j, valor)
 
   # Imprimimos
-  print(mat)
-  resolver_gauss_jordan(mat, debug=True)
+  print(f"Matriz:\n{mat}")
+  resolver_gauss_jordan(mat)
