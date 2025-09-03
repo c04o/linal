@@ -1,7 +1,5 @@
 import sys
-from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
-                               QLabel, QSpinBox, QPushButton, QTableWidget, QTableWidgetItem, 
-                               QHeaderView, QTextEdit, QMessageBox, QSplitter)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QMessageBox, QSplitter)
 from PySide6.QtCore import Qt
 
 class MatrixSolverApp(QMainWindow):
