@@ -1,6 +1,8 @@
 import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSpinBox, QPushButton, QTableWidget, QTableWidgetItem, QHeaderView, QTextEdit, QMessageBox, QSplitter)
 from PySide6.QtCore import Qt
+from classes import Matriz
+from functions.gauss_jordan import resolver_gauss_jordan, establecer_funcion_print
 
 class MatrixSolverApp(QMainWindow):
     def __init__(self):
@@ -96,7 +98,7 @@ class MatrixSolverApp(QMainWindow):
         self.matrix_table.setHorizontalHeaderLabels(headers)
         
         # Expandir la tabla para llenar el espacio disponible
-        self.matrix_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.matrix_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         
         # Inicializar celdas con valor 0 si están vacías
         for row in range(n):
@@ -152,29 +154,36 @@ class MatrixSolverApp(QMainWindow):
         n = self.n_spinbox.value()
         m = self.m_spinbox.value()
         
-        # Leer la matriz de la tabla
-        matrix = []
+        if n + 1 != m:
+          QMessageBox.warning(self, "Error", f"La matriz debe tener una dimension de n x n + 1")
+          return
+        
+        # Creamos la matriz
+        matriz: Matriz = Matriz(n, m)
+        
         try:
-            for row in range(n):
-                matrix_row = []
-                for col in range(m):
+            for row in range(0, n):
+                for col in range(0, m):
                     item = self.matrix_table.item(row, col)
                     value = float(item.text()) if item and item.text() != "" else 0.0
-                    matrix_row.append(value)
-                matrix.append(matrix_row)
+                    # La matriz empieza a contar en 1 asi que tenemos que sumar 1 aca
+                    matriz.set(row + 1, col + 1, value)
         except ValueError:
             QMessageBox.warning(self, "Error", "Por favor, ingrese solo valores numéricos en la matriz.")
             return
         
         # Aplicar el método de Gauss-Jordan
-        try:
-            steps, result = self.gauss_jordan(matrix)
-        except Exception as e:
-            QMessageBox.warning(self, "Error", f"Error al resolver la matriz: {str(e)}")
-            return
+        # try:
+        self.result_text.clear()
+        funcion_print = self.result_text.append
+        establecer_funcion_print(funcion_print)
+        resolver_gauss_jordan(matriz)
+        # except Exception as e:
+        #     QMessageBox.warning(self, "Error", f"Error al resolver la matriz: {str(e)}")
+        #     return
         
         # Mostrar los pasos y resultados
-        self.display_results(steps, result)
+        # self.display_results(steps, result)
     
     def gauss_jordan(self, matrix):
         n = len(matrix)
