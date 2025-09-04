@@ -114,6 +114,11 @@ def gauss_jordan(mat: Matriz):
         # si el numero es 2, tenemos que restar 2 veces la fila del pivote,
         # si el numero es -3, tenemos que restar -3 veces la fila del pivote
         factor: float = mat.at(fila, i)
+        # Si el numero es 0, no tenemos que ajustar la fila
+        # Saltemonos y continuemos el resto del ciclo, porque igualmente
+        # no vamos a restar nada
+        if factor == 0:
+            continue
         # Como la fila pivote ya esta normalizada, simplemente la restamos
         # fj -> fj - factor * fi
         restar_escalar_fila(mat, 1, fila, factor, i)
