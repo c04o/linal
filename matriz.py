@@ -42,6 +42,7 @@ class Matriz:
     self.matriz[fila - 1][columna - 1] = valor
 
   # El metodo to string (para que pueda imprimirse)
+  # este es un metodo por defecto de python, algo asi como el constructor
   def __str__(self) -> str:
     # El string
     string = ""
@@ -50,7 +51,9 @@ class Matriz:
     for i in range(0, self.filas):
       for j in range(0, self.columnas):
         # Agregamos la celda
-        string += f"[{self.matriz[i][j]:.2f}]\t"
+        # Esto se ve complicado pero basicamente solo es imprimir el objeto actual
+        # solo dos decimales en float, encerrado entre dos corchetes y una tabulacion al final
+        string += "[" + f"{self.matriz[i][j]:.2f}" + "]\t"
       # Salto de linea
       string += '\n'
     

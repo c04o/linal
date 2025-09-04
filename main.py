@@ -43,4 +43,4 @@ if __name__ == "__main__":
 
   # Imprimimos
   print(f"Matriz:\n{mat}")
-  resolver_gauss_jordan(mat)
+  gauss_jordan(mat)

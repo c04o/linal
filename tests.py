@@ -1,4 +1,6 @@
 import unittest
+import io
+from contextlib import redirect_stdout
 from matriz import Matriz
 from funciones import gauss_jordan
 from operaciones import *
@@ -63,6 +65,12 @@ class TestOperaciones(unittest.TestCase):
         self.assertFalse(columna_nula(mat, 1))
 
 class TestGaussJordan(unittest.TestCase):
+    def _capturar_output(self, mat):
+        buf = io.StringIO()
+        with redirect_stdout(buf):
+            gauss_jordan(mat)
+        return buf.getvalue()
+
     def test_solucion_unica(self):
         mat = Matriz(3, 4)
         datos = [
@@ -73,12 +81,12 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
+        salida = self._capturar_output(mat)
 
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 2) # type: ignore
-        self.assertAlmostEqual(resultado[1], 3) # type: ignore
-        self.assertAlmostEqual(resultado[2], -1) # type: ignore
+        # Verifica que se imprimieron las soluciones esperadas
+        self.assertIn("X1 = 2.00", salida)
+        self.assertIn("X2 = 3.00", salida)
+        self.assertIn("X3 = -1.00", salida)
 
     def test_infinitas_soluciones(self):
         mat = Matriz(3, 4)
@@ -90,8 +98,8 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        self.assertEqual(resultado, 1)
+        salida = self._capturar_output(mat)
+        self.assertIn("El sistema tiene infinitas soluciones", salida)
 
     def test_sin_solucion(self):
         mat = Matriz(2, 3)
@@ -102,14 +110,14 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(2):
             for j in range(3):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        self.assertEqual(resultado, 0)
+        salida = self._capturar_output(mat)
+        self.assertIn("El sistema no tiene solución", salida)
 
     def test_matriz_invalida(self):
         mat = Matriz(2, 2)
-        resultado = gauss_jordan(mat)
-        self.assertEqual(resultado, -1)
-    
+        salida = self._capturar_output(mat)
+        self.assertIn("La matriz debe ser de n x n+1", salida)
+
     def test_sistema_identidad(self):
         """Prueba con matriz identidad (solución trivial)"""
         mat = Matriz(3, 4)
@@ -121,12 +129,11 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat)
+        salida = self._capturar_output(mat)
         
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 5) # type: ignore
-        self.assertAlmostEqual(resultado[1], 3) # type: ignore
-        self.assertAlmostEqual(resultado[2], 7) # type: ignore
+        self.assertIn("X1 = 5", salida)
+        self.assertIn("X2 = 3", salida)
+        self.assertIn("X3 = 7", salida)
 
     def test_sistema_triangular_superior(self):
         """Prueba con matriz triangular superior"""
@@ -139,12 +146,11 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat)
+        salida = self._capturar_output(mat)
         
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 1) # type: ignore
-        self.assertAlmostEqual(resultado[1], 2) # type: ignore
-        self.assertAlmostEqual(resultado[2], 3) # type: ignore
+        self.assertIn("X1 = 1.00", salida)
+        self.assertIn("X2 = 2.00", salida)
+        self.assertIn("X3 = 3.00", salida)
 
     def test_sistema_triangular_inferior(self):
         """Prueba con matriz triangular inferior"""
@@ -157,12 +163,11 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat)
+        salida = self._capturar_output(mat)
         
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 2) # type: ignore
-        self.assertAlmostEqual(resultado[1], 2.5) # type: ignore
-        self.assertAlmostEqual(resultado[2], 1.75) # type: ignore
+        self.assertIn("X1 = 2.00", salida)
+        self.assertIn("X2 = 2.50", salida)
+        self.assertIn("X3 = 1.75", salida)
 
     def test_sistema_con_pivote_cero(self):
         """Prueba donde se necesita intercambio de filas por pivote cero"""
@@ -175,12 +180,10 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat)
-        
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], -2) # type: ignore
-        self.assertAlmostEqual(resultado[1], 11) # type: ignore
-        self.assertAlmostEqual(resultado[2], -3) # type: ignore
+        salida = self._capturar_output(mat)
+        self.assertIn("X1 = -2.00", salida)
+        self.assertIn("X2 = 11.00", salida)
+        self.assertIn("X3 = -3.00", salida)
 
     def test_sistema_con_numeros_decimales(self):
         """Prueba con números decimales"""
@@ -193,12 +196,10 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 2, places=4) # type: ignore
-        self.assertAlmostEqual(resultado[1], 3, places=4) # type: ignore
-        self.assertAlmostEqual(resultado[2], 4, places=4) # type: ignore
+        salida = self._capturar_output(mat)
+        self.assertIn("X1 = 2.00", salida)
+        self.assertIn("X2 = 3.00", salida)
+        self.assertIn("X3 = 4.00", salida)
 
     def test_sistema_2x2_simple(self):
         """Prueba con sistema 2x2 simple"""
@@ -210,11 +211,9 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(2):
             for j in range(3):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat)
-        
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 1) # type: ignore
-        self.assertAlmostEqual(resultado[1], 2) # type: ignore
+        salida = self._capturar_output(mat)
+        self.assertIn("X1 = 1.00", salida)
+        self.assertIn("X2 = 2.00", salida)
 
     def test_sistema_con_coeficientes_negativos(self):
         """Prueba con coeficientes negativos"""
@@ -226,11 +225,9 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(2):
             for j in range(3):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 2.2) # type: ignore
-        self.assertAlmostEqual(resultado[1], 1.8) # type: ignore
+        salida = self._capturar_output(mat)
+        self.assertIn("X1 = 2.20", salida)
+        self.assertIn("X2 = 1.80", salida)
 
     def test_sistema_4x4(self):
         """Prueba con sistema 4x4"""
@@ -244,13 +241,11 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(4):
             for j in range(5):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        
-        self.assertIsInstance(resultado, list)
-        self.assertAlmostEqual(resultado[0], 28/3, places=6) # type: ignore
-        self.assertAlmostEqual(resultado[1], -2/3, places=6) # type: ignore
-        self.assertAlmostEqual(resultado[2], 19/3, places=6) # type: ignore
-        self.assertAlmostEqual(resultado[3], -11/3, places=6) # type: ignore
+        salida = self._capturar_output(mat)
+        self.assertIn("X1 = 9.33", salida)
+        self.assertIn("X2 = -0.67", salida)
+        self.assertIn("X3 = 6.33", salida)
+        self.assertIn("X4 = -3.67", salida)
 
     def test_sistema_con_filas_iguales(self):
         """Prueba con filas iguales (infinitas soluciones)"""
@@ -262,8 +257,8 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(2):
             for j in range(3):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        self.assertEqual(resultado, 1)
+        salida = self._capturar_output(mat)
+        self.assertIn("El sistema tiene infinitas soluciones", salida)
 
     def test_sistema_con_filas_proporcionales(self):
         """Prueba con filas proporcionales (infinitas soluciones)"""
@@ -275,8 +270,8 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(2):
             for j in range(3):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        self.assertEqual(resultado, 1)
+        salida = self._capturar_output(mat)
+        self.assertIn("El sistema tiene infinitas soluciones", salida)
 
     def test_sistema_incompatible_3x3(self):
         """Prueba con sistema 3x3 incompatible"""
@@ -289,8 +284,9 @@ class TestGaussJordan(unittest.TestCase):
         for i in range(3):
             for j in range(4):
                 mat.set(i+1, j+1, datos[i][j])
-        resultado = gauss_jordan(mat, debug=True)
-        self.assertEqual(resultado, 0)
+        salida = self._capturar_output(mat)
+        self.assertIn("El sistema no tiene solución", salida)
+
 
 if __name__ == "__main__":
     print("\n==============================")
