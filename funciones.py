@@ -1,193 +1,252 @@
 from matriz import Matriz
+from posicion import Posicion
 from operaciones import *
 
-def gauss_jordan(mat: Matriz):
-  # Para un sistema de ecuaciones, la matriz debe ser de n x n+1
-  if(mat.columnas != mat.filas + 1):
-    print(f"La matriz debe ser de n x n+1, y las dimensiones dadas fueron de {mat.filas}x{mat.columnas}")
-    return
+__funcion_imprimir__ = print
+
+# Esta funcion existe para redirigir facilmente el output
+# por ejemplo, a la hora de hacer el GUI, en lugar de usar print
+# se va a tener que añadir los resultados a una caja de texto
+def establecer_funcion_imprimir(func):
+  global __funcion_imprimir__
+  __funcion_imprimir__ = func
+
+def imprimir(string: str):
+  __funcion_imprimir__(string)
+
+# Funcion para el output de los pasos
+__pasos__ = 0
+def imprimir_paso(string: str, mat: Matriz | None = None):
+  # Esta instructiva es para decirle a python
+  # que la variable pasos no es de la funcion, si no
+  # una global
+  global __pasos__
+  __pasos__ += 1
+  matriz_string: str = "\n"
+  if mat is not None:
+    matriz_string += mat.__str__()
+  imprimir(f"Paso #{__pasos__}: {string} {matriz_string}") 
+
+# Esta funcion convierte cualquier matriz a su forma escalonada reducida, esta se puede usar
+# como fase primera en el algoritmo gauss_jordan
+
+# La cantidad de filas y columnas son la submatriz que se desea reducir a forma escalonada
+# (por ejemplo, en un sistema de ecuaciones, queremos reducir toda la matriz excepto la ultima columna)
+def matriz_escalonada_reducida(mat: Matriz, filas: int, columnas: int):
+  # Vamos a ciclar por todas las columnas de la matriz
+  # Recordemos que range no incluye el ultimo numero, entonces necesitamos hacer un +1
+  # para que el rango sea de 1 al numero de columnas
+  fila_pivote = 0
+  columna_pivote = 0
   
-  # Numero de filas, o el tamaño real de la matriz
-  # Por ejemplo, si el sistema tiene 3 variables,
-  # o sea, 3x3, el tamaño de la matriz va a ser 3 x 4
-  # pero todos los datos que nos interesan estan en la submatriz
-  # 3x3, entonces solo queremos visitar hasta n
-  n: int = mat.filas
-  # Este es el numero de pasos que llevamos
-  pasos: int = 1
+  imprimir("Reduciendo matriz a forma escalonada reducida...")
+  # Mientras estemos en los limites de la matriz
+  while fila_pivote < filas and columna_pivote < columnas:  
+    # Nos movemos en la diagonal
+    fila_pivote += 1
+    columna_pivote += 1
 
-  # Empezamos el proceso
-  # Voy a documentar todo lo que pueda aqui asi que pongan mucha atencion:
-  # El algoritmo tiene 3 partes:
-  
-  # GENERACION DE PIVOTE
-  # Basicamente, queremos que todos nuestros pivotes esten en la diagonal principal
-  # para lograr esto, tenemos que verificar que la columna no este vacia (todos 0, en cuyo caso no se podra obtener una unica solucion)
-  # y, en el caso que la posicion pivote sea 0, intercambiarla con alguna otra fila para que deje de serlo
-  
-  # NORMALIZACION DE LA FILA
-  # Si el pivote es 2, escalamos la fila por 1/2
-  # Si el pivote es -3, escalamos la fila por -1/3
-  # de esta manera, obtendremos el valor pivote en 1 y el siguiente
-  # paso sera mucho mas facil
+    # Obtenemos el pivote
+    pivote: float = mat.at(fila_pivote, columna_pivote)
 
-  # REDUCCION DE LA COLUMNA
-  # Ya que tenemos nuestro pivote en 1, queremos convertir el resto de la columna en 0s
-  # esto nos va a ayudar a reducir la matriz hasta la forma identidad, en donde tendremos
-  # nuestros resultados.
-  # Para esto, necesitamos restar a las otras filas
-  # por ejemplo, digamos que tenemos estas 2 filas:
-  # [1][4][2]
-  # [2][6][5]
-  # Ya tenemos nuestro pivote en la primera columna
-  # sin embargo, queremos que todos los elementos en la primera columna
-  # menos el pivote sean 0, como logramos esto?
-  # Bueno, que numero tengo que restarle a 2 para que sea 0, obviamente, 2
-  # y que numero le tengo que multiplicar a 1 para que me de 2? obviamente, tambien 2
-  # Pues, en este caso, necesitamos restarle a la segunda fila la primera fila multiplicada por dos
-  # Tal que: f2 -> f2 - 2 * f1
-  # De esta manera, con el resto de columnas que no sean el pivote (entiendan que el pivote es el elemento que esta en la diagonal)
-  # Como el pivote ya se normalizo, y es 1, simplemente tenemos que restar la fila del pivote por el valor que queremos eliminar
-  # entonces si el valor es [n], queremos hacer la operacion: f -> f - n * fp
-  # Todo esto va a eventualmente generar 0s en todos los campos menos la diagonal, y nos va a dejar con una matriz identidad
-  # Ahora, esto no es cierto siempre, porque el sistema puede ser inconsistente o tener infinitas soluciones, pero eso se
-  # comprobara mas tarde
+    # Si es 0, buscamos alguna otra fila que podamos cambiar
+    while pivote == 0:
+      encontrado: bool = False
+      # Si ya nos pasamos de las columnas de la matriz
+      # sin encontrar un nuevo pivote, nuestro trabajo esta hecho
+      if columna_pivote > columnas:
+        return
 
-  # Ciclamos por todas las columnas para generar nuestros pivotes
-  # Recuerden que como range es excluyente, tenemos que usar el + 1
-  # entonces de esa manera vamos en el rango de 1 a n (la columna de los resultados se ignora)
-  for i in range(1, n + 1):
-    # Si la columna esta vacia, la ignoramos
-    if columna_nula(mat, i):
-      continue
-
-    # === GENERACION DEL PIVOTE ===
-    # Buscamos el pivote (posicion i x i, porque vamos en diagonal)
-    pivote: float = mat.at(i, i)
-
-    # Si el pivote es 0, busquemos un numero (diferente a 0) en la columna actual para volverlo el pivote
-    if pivote == 0:
-      # Busquemos una fila abajo con un pivote distinto de 0
-      for k in range(i + 1, n + 1):
-        # Si encontramos un potencial pivote, intercambiamos las filas para dejarlo
-        # en la posicion pivotal (o sea, en la diagonal)
-        if mat.at(k, i) != 0:
-          # Intercambiamos la fila
-          intercambiar_fila(mat, i, k)
-          # Actualizamos el pivote (que ahora si esta en la posicion de la diagonal)
-          pivote = mat.at(i, i)
-          # Imprimimos
-          print(f"Paso #{pasos}:")
+      for i in range(fila_pivote + 1, filas + 1):
+        # Si encontramos un buen candidato
+        if mat.at(i, columna_pivote) != 0:
+          encontrado = True
+          # Intercambiamos las filas
+          intercambiar_fila(mat, i, fila_pivote)
+          # Ahora el nuevo numero esta en la posicion pivote
+          pivote: float = mat.at(fila_pivote, columna_pivote)
           # Imprimimos el paso
-          print(f"Intercambio de filas: f{i} <-> f{k}")
-          # Imprimimos la matriz
-          print(mat)
-          # Aumentamos el numero de pasos
-          pasos += 1
-          break
+          imprimir_paso(f"Intercambio de filas, f{fila_pivote} <-> f{i}", mat)
+      
+      # Si no encontramos el pivote, revisemos la siguiente columna
+      if not encontrado:
+        columna_pivote += 1
     
-    # Si el pivote sigue siendo 0, no podemos hacer nada mas
+    # Ahora normalizamos la fila
+    if pivote != 1:
+      escalar_fila(mat, fila_pivote, 1 / pivote)
+      # Imprimimos el paso
+      imprimir_paso(f"Normalizar fila {fila_pivote}, f{fila_pivote} -> ({1/pivote:.2f}) * f{fila_pivote}", mat)
+    
+    # Y dejamos en 0 todas las filas abajo del pivote
+    for i in range(fila_pivote + 1, filas + 1):
+      # El factor es el numero que encontremos
+      factor: float = mat.at(i, columna_pivote)
+      # Si el factor ya es 0, no necesitamos hacer nada
+      if factor == 0:
+        continue
+      # Ahora multiplicamos la fila pivote por el factor y la restamos a la actual
+      # de esta manera, si nos encontramos 2, restamos 2 veces la fila principal, cuyo pivote es siempre 1
+      # gracias a la normalizacion hecha previamente
+      restar_escalar_fila(mat, 1, i, factor, fila_pivote)
+      # Imprimimos el paso
+      imprimir_paso(f"Resta compuesta de filas, f{i} -> f{i} - ({factor:.2f}) * f{fila_pivote}", mat)
+
+# Esta funcion obtiene los pivotes de una matriz escalonada reducida
+def obtener_pivotes(mat: Matriz, filas: int, columnas: int):
+  # Pivotes, son una tupla de 2 enteros
+  # porque contienen informacion de su fila y columna
+  pivotes: list[Posicion] = []
+  # Ciclamos por todas las columnas
+  fila_actual = 1
+
+  for c in range(1, columnas + 1):
+    # Obtenemos el pivote
+    pivote: float = mat.at(fila_actual, c)
+    # Si es 0, saltamos la columna actual
     if pivote == 0:
       continue
-
-    # === NORMALIZACION DE LA FILA ===
-    # Normalizar la fila del pivote
+    # Si el pivote no es 1, nos mintieron, tiremos un error
     if pivote != 1:
-      # Escalamos la fila
-      escalar_fila(mat, i, 1 / pivote)
-      # Imprimimos
-      print(f"Paso #{pasos}:")
-      # Imprimimos el paso
-      print(f"Escalacion de fila: f{i} -> ({1/pivote:.2f}) * f{i}")
-      # Imprimimos la matriz
-      print(mat)
-      # Aumentamos el numero de pasos
-      pasos += 1
+      raise Exception(f"La matriz dada no es escalonada reducida, se encontró elemento: {pivote} en posicion de pivote")
+    else: pivotes.append(Posicion(fila_actual, c))
+    # Finalmente, seguimos en la escalera para la fila de abajo
+    fila_actual += 1
+    # Si nos pasamos de las filas de la matriz, terminamos
+    if fila_actual > filas:
+      return pivotes
     
-    # === REDUCCION DE LA COLUMNA ===
-    # Hacer ceros en la columna del pivote para las otras filas
-    for fila in range(1, n+1):
-      # No queremos afectar la fila que contiene el pivote actual
-      # asi que vamos a reducir SOLO si la fila actual no es la fila que contiene al pivote
-      if fila != i:
-        # El factor es el numero que obtenemos,
-        # si el numero es 2, tenemos que restar 2 veces la fila del pivote,
-        # si el numero es -3, tenemos que restar -3 veces la fila del pivote
-        factor: float = mat.at(fila, i)
-        # Si el numero es 0, no tenemos que ajustar la fila
-        # Saltemonos y continuemos el resto del ciclo, porque igualmente
-        # no vamos a restar nada
-        if factor == 0:
-            continue
-        # Como la fila pivote ya esta normalizada, simplemente la restamos
-        # fj -> fj - factor * fi
-        restar_escalar_fila(mat, 1, fila, factor, i)
-        # Hacemos la impresion del paso
-        print(f"Paso #{pasos}:")
-        # Imprimimos el paso
-        print(f"Resta de filas: f{fila} -> f{fila} - ({factor:.2f}) * f{i}")
-        # Imprimimos la matriz
-        print(mat)
-        # Aumentamos el numero de pasos
-        pasos += 1
+  return pivotes
+  
+# Esta funcion transforma una matriz escalonada reducida a una matriz identidad
+# Para que esta funcion, funcione, la matriz DEBE ser escalonada reducida,
+# se puede reducir con la funcion matriz_escalonada_reducida
 
-  # VERIFICAMOS SI EL SISTEMA ES INCONSISTENTE
-  # el algoritmo anterior deberia dejarnos con una matriz identidad, hay dos casos donde esto no se cumple:
-  # 1. El sistema tiene infinitas soluciones
-  # en este caso, la matriz restante tendra una fila nula o vacia, o sea:
-  # [0][0][0][0]
-  # debido a esto, la variable de esta fila es libre y por ende el sistema no se puede resolver
-  # 2. El sistema no tiene ninguna solucion (es inconsistente)
-  # en este caso, la matriz restante tendra un resultado contradictorio, como:
-  # [0][0][0][4]
-  # Como una suma de valores multiplicados por 0 no puede dar otra cosa que no sea 0,
-  # esto es una contradiccion, entonces, buscamos por una contradiccion asi para verificar si el
-  # sistema es inconsistente
-  for i in range(1, n+1):
-    # Verificar si la fila excepto el resultado es todo 0s [0][0][0]
-    fila_es_cero = True
-    # Ciclamos por todos los elementos de la fila
-    for j in range(1, n+1):
-      # Si alguno no es 0
-      if mat.at(i, j) != 0:
-        # Establecemos que la fila no es 0 y rompemos el ciclo
-        fila_es_cero = False
+# La funcion sigue sirviendo si la matriz tiene multiples soluciones,
+# esta funcion colapsara todas las variables basicas en todas las filas,
+# dejando tan solo las variables libres
+def matriz_identidad(mat: Matriz, filas: int, columnas: int):
+  # Ciclamos por todas las columnas para ir reduciendo cada una
+  fila_actual = 1
+  
+  for c in range(1, columnas + 1):
+    # Obtenemos el pivote
+    pivote: float = mat.at(fila_actual, c)
+    # Si es 0, saltamos la columna actual
+    if pivote == 0:
+      continue
+    # Si el pivote no es 1, nos mintieron, tiremos un error
+    if pivote != 1:
+      raise Exception(f"La matriz dada no es escalonada reducida, se encontró elemento: {pivote} en posicion de pivote")
+    # Si no, actualizamos la fila
+    # Ciclamos por todos los espacios arriba del pivote para reducirlas
+    for f in range(1, fila_actual):
+      # El factor es el numero que encontremos
+      factor: float = mat.at(f, c)
+      # Si el factor ya es 0, no necesitamos hacer nada
+      if factor == 0:
+        continue
+      # Ahora multiplicamos la fila pivote por el factor y la restamos a la actual
+      # de esta manera, si nos encontramos 2, restamos 2 veces la fila principal, cuyo pivote es siempre 1
+      # gracias a la normalizacion hecha previamente
+      restar_escalar_fila(mat, 1, f, factor, fila_actual)
+      # Imprimimos el paso
+      imprimir_paso(f"Resta compuesta de filas, f{f} -> f{f} - ({factor:.2f}) * f{fila_actual}", mat)
+    # Finalmente, seguimos en la escalera para la fila de abajo
+    fila_actual += 1
+    # Si nos pasamos de las filas de la matriz, terminamos
+    if fila_actual > filas:
+      return
+
+# Funcion para resolver un sistema de ecuaciones
+def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
+  # Primero revisamos que las medidas de la matriz coincidan con los numeros dados
+  if mat.filas != ecuaciones:
+    raise Exception("La cantidad de filas no coincide con la cantidad de ecuaciones")
+  if mat.columnas != incognitas + 1:
+    raise Exception(f"La cantidad de columnas esperada era: {incognitas + 1}, pero la dada fue: {mat.columnas}")
+  columna_resultados: int = incognitas + 1
+  
+  # Ahora, colapsamos la matriz a su version escalonada reducida
+  matriz_escalonada_reducida(mat, ecuaciones, incognitas)
+
+  imprimir(f"Matriz en forma Escalonada Reducida:\n{mat}\n")
+  
+  # Ahora revisaremos si es consistente
+  # Revisemos todas las ecuaciones para asegurarnos que no existe una
+  # contradiccion
+  for fila in range(1, ecuaciones + 1):
+    # Revisar si la fila son solo ceros 
+    fila_nula: bool = True
+    # Ciclamos hasta encontrar un elemento distinto de cero
+    for columna in range(1, incognitas + 1):
+      if mat.at(fila, columna) != 0:
+        fila_nula = False
         break
-            
-    # Si la fila es 0, pero el resultado no, es una contradiccion, sistema inconsistente
-    if fila_es_cero and mat.at(i, n+1) != 0:
-      print("El sistema no tiene solución")
-      # El return es para que salgamos ya de la funcion, porque ya tenemos nuestro resultado
-      return
-
-  # Ahora que sabemos que no hay contradicciones,
-  # si existe alguna fila nula, hay una variable libre,
-  # por ende, infinitas soluciones
-  for i in range(1, n+1):
-    if fila_nula(mat, i):
-      print("El sistema tiene infinitas soluciones")
-      # Se explica arriba porque hay un return
-      return
+    # Si la fila es nula, pero el resultado no, quiere decir que nos estamos contradiciendo,
+    # por ende, el sistema es inconsistente
+    if fila_nula and mat.at(fila, columna_resultados) != 0:
+      imprimir("El sistema es inconsistente")
   
-  # Creamos una lista
-  soluciones: list[float] = []
+  # Si no, revisamos las variables libres y las variables basicas
+  # Basicamente, si una variable es basica, anotamos su numero de fila
+  # si una variable es libre, la apuntamos como None
+  # Iniciamos todas en None, cuando los pivotes nos digan lo contrario,
+  # marcamos la correspondiente con su fila
+  variables: list[int | None] = [None] * incognitas
+  # Obtenemos los pivotes para saber cuantas variables libres tenemos
+  pivotes: list[Posicion] = obtener_pivotes(mat, ecuaciones, incognitas)
 
-  # Extraer soluciones directamente de la matriz identidad
-  # Estamos ciclando de 1 a n, pero como los rangos son exclusivos en python, necesitamos usar n + 1
-  # El rango [1, n+1) es [1, 2, 3 ... n]
-  for i in range(1, n+1):
-    # Por cada fila, buscaremos la solucion (fila actual, columna n + 1)
-    soluciones.append( mat.at(fila=i, columna=n+1) )
-  
-  # Ahora imprimimos todas las soluciones
-  # Usamos un for para ciclar por el arreglo de soluciones
-  for i in range(0, len(soluciones)):
-    # Imprimimos el numero de variable y su resultado
-    # Como los arreglos empiezan de 0, tenemos que sumarle 1
-    # para que en lugar de imprimir empezando de 0, imprima empezando de 1
-    # si no el resultado se veria algo asi:
-    # x0 = 2.0
-    # x1 = -3.5
-    # x3 = 4.5
-    # y nosotros no queremos eso verdad?
-    print(f"X{i + 1} = {soluciones[i]:.2f}")
+  imprimir(f"El sistema contiene {len(pivotes)} pivotes.")
+  # Convertimos a matriz identidad para obtener los resultados
+  matriz_identidad(mat, ecuaciones, incognitas)
+
+  for i in range(0, len(pivotes)):
+    imprimir(f"Pivote #{i}: {pivotes[i]}")
+  # Si el numero de pivotes es igual a las incognitas, el sistema tiene una unica solucion
+  # y no hay variables libres
+  if len(pivotes) == incognitas:
+    imprimir("\nLa matriz tiene una unica solución:\n")
+    # Obtenemos los resultados de la columna de resultados
+    for i in range(1, incognitas + 1):
+      imprimir(f"X{i} = {mat.at(i, columna_resultados)}")
+  # De otra manera, imprimiremos el sistema con sus infinitas soluciones
+  else:
+    imprimir("\nLa matriz tiene infinitas soluciones:\n")
+    # Ciclamos por los pivotes para asignar las variables libres y basicas
+    for pivote in pivotes:
+      variables[pivote.columna - 1] = pivote.fila
+    # Ahora imprimimos las variables basicas con sus condiciones, e imprimimos las variables libres
+    for i in range(0, len(variables)):
+      fila_variable = variables[i]
+
+      if fila_variable == None:
+        imprimir(f"X{i + 1} es libre")
+      else:
+        # De otra manera, vamos a imprimir la ecuacion para la variable
+        ecuacion: str = ""
+        # Agregamos el numero primero
+        resultado = mat.at(fila_variable, columna_resultados)
+        # Si no es 0, lo agregamos a la ecuacion
+        if resultado != 0:
+          ecuacion += f"{resultado}"
+        # Despues, agregamos el resto de variables como negativo (ya que quedarian con el signo volteado)
+        # tras el despeje
+        for columna in range(1, incognitas + 1):
+          # Si la columna es la variable, saltarsela
+          if columna == i + 1:
+            continue
+          # Si hay un coeficiente, entonces escribimos
+          coeficiente = mat.at(fila_variable, columna) * -1
+          if coeficiente != 0:
+            # Obtenemos el coeficiente puro, el signo lo añadiremos nosotros
+            coeficiente_sin_signo = abs(coeficiente)
+            # Añadimos el signo
+            if coeficiente >= 0:
+              ecuacion += " + "
+            else:
+              ecuacion += " - "
+            # Ahora añadimos la variable
+            ecuacion += f"({coeficiente_sin_signo})X{columna}"
+        # Finalmente, imprimimos la variable con su ecuacion
+        imprimir(f"X{i + 1} = {ecuacion}")

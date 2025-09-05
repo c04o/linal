@@ -1,46 +1,27 @@
 from matriz import Matriz
 from funciones import *
+from input import safe_input
 
-# Uso de la clase matriz y las funciones
 if __name__ == "__main__":
-  tamaño: int = 0
-  
-  # Mientras el usuario no nos de un input valido
-  while True:
-    # El try catch basicamente agarra errores, entonces, si hay un error convirtiendo el input
-    # a numero, pues, atraparemos el error e informaremos al usuario
-    try:
-      tamaño = int(input("De que tamaño es el sistema de ecuaciones?: "))
-      # Si se puede parsear, fin al loop
-      break
-    except:
-      print("Por favor ingrese un número válido")
-  
-  # Creamos nuestra matriz, con la columna extra para los resultados
-  mat: Matriz = Matriz(filas=tamaño, columnas=tamaño + 1)
+  print("--- LINAL CLI ---\n")
+  print("Esta aplicacion es la version CLI (Command Line Interface)")
+  print("Tiene diversas aplicaciones y funciones, que en un futuro se conectaran a una interfaz grafica.\n")
 
-  for i in range(1, tamaño + 1):
-    print(f"Fila #{i}:")
-    for j in range(1, tamaño + 2):
-      if j == tamaño + 1:
-        print(f"Ingrese el valor del resultado: ")
-      else:
-        print(f"Ingrese el coeficiente de X{j}: ")
-      
-      valor: float = 0
-      # Mientras el usuario no nos de un input valido
-      while True:
-        # El try catch basicamente agarra errores, entonces, si hay un error convirtiendo el input
-        # a numero, pues, atraparemos el error e informaremos al usuario
-        try:
-          valor = float(input())
-          # Si se puede parsear, fin al loop
-          break
-        except:
-          print("Por favor ingrese un número válido")
-      
-      mat.set(i, j, valor)
-
-  # Imprimimos
-  print(f"Matriz:\n{mat}")
-  gauss_jordan(mat)
+  print("--- MATRIZ ESCALONADA REDUCIDA ---")
+  # Conseguimos la cantidad de incognitas y ecuaciones
+  incognitas: int = safe_input("Ingrese la cantidad de incognitas: ", funcion=int)
+  ecuaciones: int = safe_input("Ingrese la cantidad de ecuaciones: ", funcion=int)
+  # Nuestra cantidad de columnas va a ser nuestras incognitas + 1 (para los resultados)
+  # Nuestra cantidad de filas es la cantidad de ecuaciones
+  matriz: Matriz = Matriz(ecuaciones, incognitas + 1)
+  # Vamos a ciclar para obtener la matriz
+  for fila in range(1, ecuaciones + 1):
+    for columna in range(1, incognitas + 2):
+      prompt: str = f"Ingrese el coeficiente de X{columna}: " if columna != incognitas + 1 else "Ingrese el resultado: "
+      valor: float = safe_input(prompt, funcion=float)
+      matriz.set(fila, columna, valor)
+  # Imprimimos la matriz inicial
+  print(f"Matriz Inicial:\n{matriz}")
+  print("\n\n")
+  # Corremos la formula escalonada reducida para todas las columnas y filas menos la del resultado
+  resolver_sistema(matriz, ecuaciones, incognitas) 
