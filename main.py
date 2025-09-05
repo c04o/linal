@@ -1,13 +1,13 @@
 from matriz import Matriz
 from funciones import *
-from input import safe_input
+from aux import safe_input
 
 if __name__ == "__main__":
   print("--- LINAL CLI ---\n")
   print("Esta aplicacion es la version CLI (Command Line Interface)")
   print("Tiene diversas aplicaciones y funciones, que en un futuro se conectaran a una interfaz grafica.\n")
 
-  print("--- MATRIZ ESCALONADA REDUCIDA ---")
+  print("--- CALCULADORA DE SISTEMA DE ECUACIONES ---")
   # Conseguimos la cantidad de incognitas y ecuaciones
   incognitas: int = safe_input("Ingrese la cantidad de incognitas: ", funcion=int)
   ecuaciones: int = safe_input("Ingrese la cantidad de ecuaciones: ", funcion=int)
@@ -16,6 +16,7 @@ if __name__ == "__main__":
   matriz: Matriz = Matriz(ecuaciones, incognitas + 1)
   # Vamos a ciclar para obtener la matriz
   for fila in range(1, ecuaciones + 1):
+    print(f"\n-- Fila #{fila} --\n")
     for columna in range(1, incognitas + 2):
       prompt: str = f"Ingrese el coeficiente de X{columna}: " if columna != incognitas + 1 else "Ingrese el resultado: "
       valor: float = safe_input(prompt, funcion=float)

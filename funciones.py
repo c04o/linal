@@ -1,6 +1,7 @@
 from matriz import Matriz
 from posicion import Posicion
 from operaciones import *
+from aux import pretty_number
 
 __funcion_imprimir__ = print
 
@@ -46,18 +47,26 @@ def matriz_escalonada_reducida(mat: Matriz, filas: int, columnas: int):
     fila_pivote += 1
     columna_pivote += 1
 
-    # Obtenemos el pivote
-    pivote: float = mat.at(fila_pivote, columna_pivote)
-
-    # Si es 0, buscamos alguna otra fila que podamos cambiar
+    pivote: float = 0
+    # Busquemos nuestro pivote
     while pivote == 0:
-      encontrado: bool = False
       # Si ya nos pasamos de las columnas de la matriz
       # sin encontrar un nuevo pivote, nuestro trabajo esta hecho
       if columna_pivote > columnas:
         return
 
+      # Obtenemos el numero en la posicion pivote
+      pivote: float = mat.at(fila_pivote, columna_pivote)
+      
+      # Si no esta vacia la posicion del pivote, todo bien, ese es nuestro pivote
+      if pivote != 0:
+        break
+      
+      # Si no, tenemos que buscar otro en la misma columna
+      encontrado: bool = False
+
       for i in range(fila_pivote + 1, filas + 1):
+        print(f"Revisando filas de {fila_pivote + 1} hasta {filas} por un pivote")
         # Si encontramos un buen candidato
         if mat.at(i, columna_pivote) != 0:
           encontrado = True
@@ -70,13 +79,15 @@ def matriz_escalonada_reducida(mat: Matriz, filas: int, columnas: int):
       
       # Si no encontramos el pivote, revisemos la siguiente columna
       if not encontrado:
+        print(f"La columna {columna_pivote} no tiene ningun buen candidato para pivote")
         columna_pivote += 1
     
+    print(f"Pivote encontrado: {fila_pivote}, {columna_pivote}")
     # Ahora normalizamos la fila
     if pivote != 1:
       escalar_fila(mat, fila_pivote, 1 / pivote)
       # Imprimimos el paso
-      imprimir_paso(f"Normalizar fila {fila_pivote}, f{fila_pivote} -> ({1/pivote:.2f}) * f{fila_pivote}", mat)
+      imprimir_paso(f"Normalizar fila {fila_pivote}, f{fila_pivote} -> {pretty_number(1 / pivote)} * f{fila_pivote}", mat)
     
     # Y dejamos en 0 todas las filas abajo del pivote
     for i in range(fila_pivote + 1, filas + 1):
@@ -90,7 +101,14 @@ def matriz_escalonada_reducida(mat: Matriz, filas: int, columnas: int):
       # gracias a la normalizacion hecha previamente
       restar_escalar_fila(mat, 1, i, factor, fila_pivote)
       # Imprimimos el paso
-      imprimir_paso(f"Resta compuesta de filas, f{i} -> f{i} - ({factor:.2f}) * f{fila_pivote}", mat)
+      if factor == 1:
+        imprimir_paso(f"Resta compuesta de filas, f{i} -> f{i} - f{fila_pivote}", mat)
+      if factor == -1:
+        imprimir_paso(f"Suma compuesta de filas, f{i} -> f{i} + f{fila_pivote}", mat)
+      elif factor > 0:
+        imprimir_paso(f"Resta compuesta de filas, f{i} -> f{i} - {pretty_number(factor)} * f{fila_pivote}", mat)
+      elif factor < 0:
+        imprimir_paso(f"Suma compuesta de filas, f{i} -> f{i} + {pretty_number(factor)} * f{fila_pivote}", mat)
 
 # Esta funcion obtiene los pivotes de una matriz escalonada reducida
 def obtener_pivotes(mat: Matriz, filas: int, columnas: int):
@@ -129,6 +147,7 @@ def matriz_identidad(mat: Matriz, filas: int, columnas: int):
   # Ciclamos por todas las columnas para ir reduciendo cada una
   fila_actual = 1
   
+  imprimir("Reduciendo matriz a identidad...")
   for c in range(1, columnas + 1):
     # Obtenemos el pivote
     pivote: float = mat.at(fila_actual, c)
@@ -151,7 +170,14 @@ def matriz_identidad(mat: Matriz, filas: int, columnas: int):
       # gracias a la normalizacion hecha previamente
       restar_escalar_fila(mat, 1, f, factor, fila_actual)
       # Imprimimos el paso
-      imprimir_paso(f"Resta compuesta de filas, f{f} -> f{f} - ({factor:.2f}) * f{fila_actual}", mat)
+      if factor == 1:
+        imprimir_paso(f"Resta compuesta de filas, f{f} -> f{f} - f{fila_actual}", mat)
+      if factor == -1:
+        imprimir_paso(f"Suma compuesta de filas, f{f} -> f{f} + f{fila_actual}", mat)
+      elif factor > 0:
+        imprimir_paso(f"Resta compuesta de filas, f{f} -> f{f} - {pretty_number(factor)} * f{fila_actual}", mat)
+      elif factor < 0:
+        imprimir_paso(f"Suma compuesta de filas, f{f} -> f{f} + {pretty_number(factor)} * f{fila_actual}", mat)
     # Finalmente, seguimos en la escalera para la fila de abajo
     fila_actual += 1
     # Si nos pasamos de las filas de la matriz, terminamos
@@ -201,6 +227,8 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
   # Convertimos a matriz identidad para obtener los resultados
   matriz_identidad(mat, ecuaciones, incognitas)
 
+  imprimir(f"Matriz en forma identidad:\n{mat}\n")
+
   for i in range(0, len(pivotes)):
     imprimir(f"Pivote #{i}: {pivotes[i]}")
   # Si el numero de pivotes es igual a las incognitas, el sistema tiene una unica solucion
@@ -209,7 +237,7 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
     imprimir("\nLa matriz tiene una unica solución:\n")
     # Obtenemos los resultados de la columna de resultados
     for i in range(1, incognitas + 1):
-      imprimir(f"X{i} = {mat.at(i, columna_resultados)}")
+      imprimir(f"X{i} = {pretty_number(mat.at(i, columna_resultados))}")
   # De otra manera, imprimiremos el sistema con sus infinitas soluciones
   else:
     imprimir("\nLa matriz tiene infinitas soluciones:\n")
@@ -229,7 +257,7 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
         resultado = mat.at(fila_variable, columna_resultados)
         # Si no es 0, lo agregamos a la ecuacion
         if resultado != 0:
-          ecuacion += f"{resultado}"
+          ecuacion += f"{pretty_number(resultado)} "
         # Despues, agregamos el resto de variables como negativo (ya que quedarian con el signo volteado)
         # tras el despeje
         for columna in range(1, incognitas + 1):
@@ -243,10 +271,13 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
             coeficiente_sin_signo = abs(coeficiente)
             # Añadimos el signo
             if coeficiente >= 0:
-              ecuacion += " + "
+              ecuacion += "+ "
             else:
-              ecuacion += " - "
+              ecuacion += "- "
             # Ahora añadimos la variable
-            ecuacion += f"({coeficiente_sin_signo})X{columna}"
+            # Si el coeficiente es 1, no lo imprimimos
+            if coeficiente_sin_signo != 1:
+              ecuacion += f"{pretty_number(coeficiente_sin_signo)}"
+            ecuacion += f"X{columna} "
         # Finalmente, imprimimos la variable con su ecuacion
         imprimir(f"X{i + 1} = {ecuacion}")

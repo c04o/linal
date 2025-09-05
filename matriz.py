@@ -1,3 +1,5 @@
+from aux import pretty_number
+
 class Matriz:
   # Representa a la matriz,
   matriz: list[list[float]] = []
@@ -53,7 +55,7 @@ class Matriz:
         # Agregamos la celda
         # Esto se ve complicado pero basicamente solo es imprimir el objeto actual
         # solo dos decimales en float, encerrado entre dos corchetes y una tabulacion al final
-        string += "[" + f"{self.matriz[i][j]:.2f}" + "]\t"
+        string += "[" + f"{pretty_number(self.matriz[i][j])}" + "]\t"
       # Salto de linea
       string += '\n'
     
