@@ -23,6 +23,6 @@ if __name__ == "__main__":
       matriz.set(fila, columna, valor)
   # Imprimimos la matriz inicial
   print(f"Matriz Inicial:\n{matriz}")
-  print("\n\n")
   # Corremos la formula escalonada reducida para todas las columnas y filas menos la del resultado
+  print("\n=== RESOLUCION ===")
   resolver_sistema(matriz, ecuaciones, incognitas) 
