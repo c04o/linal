@@ -26,3 +26,15 @@ def pretty_number(num, decimals=4):
 
     # Por si acaso le pasan algo raro
     return str(num)
+
+# Matrices de cambio, de numeros a numeros en potencia (supercript) y numeros de subscript (Para en lugar de imprimir X2, poder imprimir X₂)
+SUB = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
+
+# Esta funcion convierte todos los numeros del string a subscript
+def to_subscript(string: str):
+  return string.translate(SUB)
+
+# Esta funcion convierte todos los numeros del string a superscript
+def to_superscript(string: str):
+  return string.translate(SUP)

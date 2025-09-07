@@ -1,6 +1,6 @@
 from matriz import Matriz
 from funciones import *
-from aux import safe_input
+from aux import safe_input, to_subscript
 
 if __name__ == "__main__":
   print("--- LINAL CLI ---\n")
@@ -18,7 +18,7 @@ if __name__ == "__main__":
   for fila in range(1, ecuaciones + 1):
     print(f"\n-- Fila #{fila} --\n")
     for columna in range(1, incognitas + 2):
-      prompt: str = f"Ingrese el coeficiente de X{columna}: " if columna != incognitas + 1 else "Ingrese el resultado: "
+      prompt: str = to_subscript(f"Ingrese el coeficiente de X{columna}: ") if columna != incognitas + 1 else "Ingrese el resultado: "
       valor: float = safe_input(prompt, funcion=float)
       matriz.set(fila, columna, valor)
   # Imprimimos la matriz inicial
