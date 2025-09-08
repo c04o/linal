@@ -1,6 +1,6 @@
 from matriz import Matriz
 from funciones import *
-from aux import safe_input, to_subscript
+from auxiliar import safe_input, to_subscript
 
 if __name__ == "__main__":
     print("--- LINAL CLI ---\n")

@@ -75,11 +75,11 @@ def termino_a_string(coeficiente: float, variable: int | None, es_primer_termino
         return ""
 
     signo = ""
-    if not es_primer_termino:
-        signo = "+ " if coeficiente > 0 else "- "
+    if not es_primer_termino or coeficiente < 0:
+        signo = "+ " if coeficiente >= 0 else "- "
 
     coeficiente_abs = abs(coeficiente)
-    if es_uno(coeficiente_abs):
+    if es_uno(coeficiente_abs) and variable is not None:
         return f"{signo}{nombre_variable}"
     else:
         return f"{signo}{pretty_number(coeficiente_abs)}{nombre_variable} "

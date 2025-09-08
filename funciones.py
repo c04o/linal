@@ -1,7 +1,7 @@
 from matriz import Matriz
 from posicion import Posicion
 from operaciones import *
-from aux import pretty_number, to_subscript, termino_a_string
+from auxiliar import pretty_number, to_subscript, termino_a_string
 
 # Funcion para el output de los pasos
 __pasos__ = 0
@@ -251,15 +251,16 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
             variables[pivote.columna - 1] = pivote.fila
         # Ahora imprimimos las variables basicas con sus condiciones, e imprimimos las variables libres
         for i in range(0, len(variables)):
+            fila_variable = variables[i]
 
             # Si la variable es libre, es libre
-            if i not in columnas_pivote:
+            if fila_variable is None:
                 print(to_subscript(f"X{i + 1} es libre"))
             else:
                 # De otra manera, vamos a imprimir la ecuacion para la variable
                 ecuacion: str = to_subscript(f"X{i + 1} = ")
                 # Agregamos el numero primero
-                resultado = mat.at(i, columna_resultados)
+                resultado = mat.at(fila_variable, columna_resultados)
                 # Esta variable nos indica cuando ya no es el primer termino, y no necesitamos ubicar el primer +
                 primer_termino: bool = True
                 # Si no es 0, lo agregamos a la ecuacion
@@ -274,7 +275,7 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
                     if columna == i + 1:
                         continue
                     # Si hay un coeficiente, entonces escribimos
-                    coeficiente = mat.at(i, columna) * -1
+                    coeficiente = mat.at(fila_variable, columna) * -1
                     ecuacion += termino_a_string(
                         coeficiente=coeficiente, variable=columna, es_primer_termino=primer_termino)
                     # Ya usamos el primer termino

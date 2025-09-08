@@ -1,4 +1,4 @@
-from aux import pretty_number
+from auxiliar import pretty_number
 
 
 class Matriz:
