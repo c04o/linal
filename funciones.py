@@ -13,10 +13,10 @@ def imprimir_paso(texto_paso: str, mat: Matriz | None = None):
     # una global
     global __pasos__
     __pasos__ += 1
-    matriz_string: str = "\n"
+    matriz_string: str = ""
     if mat is not None:
         matriz_string += mat.__str__()
-    print(f"Paso #{__pasos__}: {texto_paso} {matriz_string}")
+    print(f"Paso #{__pasos__}: {texto_paso} {matriz_string}\n")
 
 # Esta funcion convierte cualquier matriz a su forma escalonada reducida, esta se puede usar
 # como fase primera en el algoritmo gauss_jordan
@@ -213,6 +213,9 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
     # si una variable es libre, la apuntamos como None
     # Iniciamos todas en None, cuando los pivotes nos digan lo contrario,
     # marcamos la correspondiente con su fila
+
+    # x1 es libre
+    # x2 es basica
     variables: list[int | None] = [None] * incognitas
     # Obtenemos los pivotes para saber cuantas variables libres tenemos
     pivotes: list[Posicion] = obtener_pivotes(mat, ecuaciones, incognitas)
@@ -227,8 +230,8 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
     for i in range(0, len(pivotes)):
         print(f"Pivote #{i + 1}: {pivotes[i]}")
         # Si la columna del pivote actual no esta en columnas_pivote, la agregamos
-        if pivotes[i].fila not in columnas_pivote:
-            columnas_pivote.append(pivotes[i].fila)
+        if pivotes[i].columna not in columnas_pivote:
+            columnas_pivote.append(pivotes[i].columna)
 
     print(f"Columnas pivote: {columnas_pivote}")
 
@@ -248,22 +251,22 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
             variables[pivote.columna - 1] = pivote.fila
         # Ahora imprimimos las variables basicas con sus condiciones, e imprimimos las variables libres
         for i in range(0, len(variables)):
-            fila_variable = variables[i]
 
             # Si la variable es libre, es libre
-            if fila_variable is None:
+            if i not in columnas_pivote:
                 print(to_subscript(f"X{i + 1} es libre"))
             else:
                 # De otra manera, vamos a imprimir la ecuacion para la variable
                 ecuacion: str = to_subscript(f"X{i + 1} = ")
                 # Agregamos el numero primero
-                resultado = mat.at(fila_variable, columna_resultados)
+                resultado = mat.at(i, columna_resultados)
                 # Esta variable nos indica cuando ya no es el primer termino, y no necesitamos ubicar el primer +
                 primer_termino: bool = True
                 # Si no es 0, lo agregamos a la ecuacion
                 if resultado != 0:
                     ecuacion += termino_a_string(coeficiente=resultado,
                                                  variable=None, es_primer_termino=primer_termino)
+                    primer_termino = False
                 # Despues, agregamos el resto de variables como negativo (ya que quedarian con el signo volteado)
                 # tras el despeje
                 for columna in range(1, incognitas + 1):
@@ -271,7 +274,7 @@ def resolver_sistema(mat: Matriz, ecuaciones: int, incognitas: int):
                     if columna == i + 1:
                         continue
                     # Si hay un coeficiente, entonces escribimos
-                    coeficiente = mat.at(fila_variable, columna) * -1
+                    coeficiente = mat.at(i, columna) * -1
                     ecuacion += termino_a_string(
                         coeficiente=coeficiente, variable=columna, es_primer_termino=primer_termino)
                     # Ya usamos el primer termino

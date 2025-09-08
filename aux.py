@@ -51,13 +51,13 @@ SUP = str.maketrans("0123456789", "⁰¹²³⁴⁵⁶⁷⁸⁹")
 
 
 def to_subscript(string: str):
-    return string.translate(SUB)
+    return string.translate(SUB)  # X3 = X₃
 
 # Esta funcion convierte todos los numeros del string a superscript
 
 
 def to_superscript(string: str):
-    return string.translate(SUP)
+    return string.translate(SUP)  # Yo soy el numero ¹
 
 # Mejorar la función de impresión de términos
 # Para escribir un termino sin variable el argumento variable debe ser 0
@@ -68,13 +68,13 @@ def termino_a_string(coeficiente: float, variable: int | None, es_primer_termino
     if variable != None:
         if variable <= 0:
             raise Exception(
-                "No se puede imprimir un termio con un numero de variable negativa")
+                "No se puede imprimir un termino con un numero de variable negativa")
         nombre_variable = to_subscript(f"X{variable}")
 
     if es_cero(coeficiente):
         return ""
 
-    signo = "" if es_primer_termino else " "
+    signo = ""
     if not es_primer_termino:
         signo = "+ " if coeficiente > 0 else "- "
 
@@ -82,4 +82,4 @@ def termino_a_string(coeficiente: float, variable: int | None, es_primer_termino
     if es_uno(coeficiente_abs):
         return f"{signo}{nombre_variable}"
     else:
-        return f"{signo}{pretty_number(coeficiente_abs)}{nombre_variable}"
+        return f"{signo}{pretty_number(coeficiente_abs)}{nombre_variable} "

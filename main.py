@@ -16,10 +16,11 @@ if __name__ == "__main__":
     # Nuestra cantidad de columnas va a ser nuestras incognitas + 1 (para los resultados)
     # Nuestra cantidad de filas es la cantidad de ecuaciones
     matriz: Matriz = Matriz(ecuaciones, incognitas + 1)
+    num_columnas = incognitas + 1
     # Vamos a ciclar para obtener la matriz
     for fila in range(1, ecuaciones + 1):
         print(f"\n-- Fila #{fila} --\n")
-        for columna in range(1, incognitas + 2):
+        for columna in range(1, num_columnas + 1):
             prompt: str = to_subscript(
                 f"Ingrese el coeficiente de X{columna}: ") if columna != incognitas + 1 else "Ingrese el resultado: "
             valor: float = safe_input(prompt, funcion=float)

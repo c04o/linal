@@ -28,7 +28,14 @@ def sumar_fila(mat: Matriz, fila_a: int, fila_b: int):
         mat.set(fila_a, i, nuevo_valor)
 
 # Sumar filas escaladas
-# fa -> a*fa + b*fb
+# fa -> c*fa + d*fb
+
+# [1][5][4]
+# [2][1][5]
+
+# f2 -> 1 * f2 + (-2) * f1
+# [1][5][4]
+# [0][-9][-3]
 
 
 def sumar_escalar_fila(mat: Matriz, escalar_a: float, fila_a: int, escalar_b: float, fila_b: int):
@@ -50,8 +57,18 @@ def restar_fila(mat: Matriz, fila_a: int, fila_b: int):
         mat.set(fila_a, i, nuevo_valor)
 
 # Restar filas escaladas
-# fa -> a*fa + b*fb
+# fa -> c*fa - d*fb
 
+
+# Sumar filas escaladas
+# fa -> c*fa + d*fb
+
+# [1][5][4]
+# [2][1][5]
+
+# f2 -> 1 * f2 - 2 * f1
+# [1][5][4]
+# [0][-9][-3]
 
 def restar_escalar_fila(mat: Matriz, escalar_a: float, fila_a: int, escalar_b: float, fila_b: int):
     # Ciclamos por la fila A para cambiar los valores

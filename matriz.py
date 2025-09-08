@@ -4,8 +4,8 @@ from aux import pretty_number
 class Matriz:
     # Representa a la matriz,
     matriz: list[list[float]] = []
-    filas: int = -1
-    columnas: int = -1
+    filas = 0
+    columnas = 0
 
     # Constructor de la clase
     def __init__(self, filas: int, columnas: int):
