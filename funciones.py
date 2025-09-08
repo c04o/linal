@@ -16,7 +16,7 @@ def imprimir_paso(texto_paso: str, mat: Matriz | None = None):
     matriz_string: str = ""
     if mat is not None:
         matriz_string += mat.__str__()
-    print(f"Paso #{__pasos__}: {texto_paso} {matriz_string}\n")
+    print(f"Paso #{__pasos__}: {texto_paso} \n{matriz_string}\n")
 
 # Esta funcion convierte cualquier matriz a su forma escalonada reducida, esta se puede usar
 # como fase primera en el algoritmo gauss_jordan
